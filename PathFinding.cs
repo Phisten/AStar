@@ -62,6 +62,7 @@ namespace PathFinding
             this.GoalLocation = GoalLocation;
             this.OpenMatrix = new double[(int)Math.Pow(MapSize, 2) + 1, 3];
             this.ClosedMatrix = new double[(int)Math.Pow(MapSize, 2) + 1, 3];
+            this.Map = Map;
         }
 
         /// <summary>
@@ -97,7 +98,11 @@ namespace PathFinding
                 while (!(CurrentLocation == GoalLocation))
                 {
                     //開始找路徑
-                    if (FindRoute().Equals(0)) break;//當找不到就離開避免進入無窮迴圈
+                    if (FindRoute().Equals(0))
+                    {
+                        //break;//當找不到就離開避免進入無窮迴圈
+                        return false;
+                    }
                 }
 
                 return true;
@@ -380,7 +385,7 @@ namespace PathFinding
         /// <summary>
         /// 找出最短路徑
         /// </summary>
-        public string TraceBack()
+        public string TraceBack(ref List<int> pathIndex)
         {
             int index = ClosedSize;//Trace parent nodes back to start.
             double[,] TempArray = new double[ClosedSize + 1, 2];
@@ -428,11 +433,15 @@ namespace PathFinding
 
             } while (!(Done));
 
+
+            pathIndex = new List<int>(ClosedSize);
             //Print the rendered route.
             for (int i = RouteStart; i <= ClosedSize; i++)
             {
                 TempString += Convert.ToString(TempArray[i, 0]) + ", ";
+                pathIndex.Add((int)TempArray[i, 0]);
             }
+
             return TempString;
         }
     }
