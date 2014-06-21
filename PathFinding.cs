@@ -32,26 +32,60 @@ namespace PathFinding
             List<AStarNode> openList = new List<AStarNode>();
             List<AStarNode> closedList = new List<AStarNode>();
 
+
+            map.PathReset();
+
             openList.Add(map.GetNodeFromIndex(startNodeIndex));
+            openList[0].Cost = 0;
             openList[0].Risk = map.GetGridDistance(startNodeIndex, endNodeIndex);
             openList[0].State = AStarNode.NodeState.Open;
+            map.SetAllNodeRisk(endNodeIndex);
 
-            PathTestLoop(endNodeIndex, map, openList, closedList);
-
+            int PathSearchResult = PathTestLoop(endNodeIndex, map, openList, closedList);
 
             bestPath = new List<AStarNode>();
-            return 0;
+            //search bestPath
+            if (PathSearchResult == 0)
+            {
+                TrackBack(endNodeIndex, map, bestPath);
+            }
+
+            return PathSearchResult;
         }
 
-        private static void PathTestLoop(int endNodeIndex, AStarMap map, List<AStarNode> openList, List<AStarNode> closedList)
+        private static void TrackBack(int endNodeIndex, AStarMap map, List<AStarNode> bestPath)
         {
+            bool trackBackContinue = true;
+            AStarNode curNode = map.GetNodeFromIndex(endNodeIndex);
+            do
+            {
+                bestPath.Add(curNode);
+                if (curNode.ParentNode != null)
+                {
+                    curNode = curNode.ParentNode;
+                }
+                else
+                {
+                    trackBackContinue = false;
+                }
+            } while (trackBackContinue);
+        }
+
+        private static int PathTestLoop(int endNodeIndex, AStarMap map, List<AStarNode> openList, List<AStarNode> closedList)
+        {
+            int searchResult = 0;
             //path finding loop
             bool SearchEnd = false;
             do
             {
-                //檢查OpenList內是否還有待探索節點, 無則表示已無活路或皆搜索完畢
+                //檢查OpenList內是否還有待探索節點, 無則表示已無活路
                 if (openList.Count == 0)
+                {
+                    searchResult = 1;
                     SearchEnd = true;
+
+                    break;
+                }
 
                 //get the Node of lowest total cost
                 AStarNode curNode = openList[0];
@@ -59,18 +93,24 @@ namespace PathFinding
                     if (curNode.TotalCost > openList[i].TotalCost)
                         curNode = openList[i];
 
+
+                //move curNode to closeList
+                curNode.State = AStarNode.NodeState.Close;
+                closedList.Add(curNode);
+                openList.Remove(curNode);
+
                 //Expansion Neighboring Node , label their Open
-                for (int i = -1; i < 3; i++)
+                for (int i = -1; i < 2; i++)
                 {
                     int X = curNode.X + i;
-                    for (int j = -1; j < 3; j++)
+                    for (int j = -1; j < 2; j++)
                     {
                         int Y = curNode.Y + j;
                         if (X >= 0 && X < map.Width && Y >= 0 && Y < map.Height) //未超過地圖邊界
                         {
                             AStarNode newNodeTmp = map[X][Y];
-                            if (newNodeTmp.Value == 0 &&  //Value 0 代表可通過 無障礙物
-                                newNodeTmp != curNode) //排除Comparison by self
+                            if (newNodeTmp.Value == 0)  //Value 0 代表可通過 無障礙物
+                                //&& newNodeTmp != curNode) //排除Comparison by self
                             {
                                 // if is endPoint
                                 if (newNodeTmp.Index == endNodeIndex)
@@ -84,10 +124,12 @@ namespace PathFinding
                                     case AStarNode.NodeState.Open:
                                     case AStarNode.NodeState.Close:
                                         // if newPath is not better
+                                        // *this step will Exclude curNode self and curNode.Parent
                                         if (newNodeTmp.Cost <= curNode.Cost + 1)
                                         {
                                             continue;
                                         }
+                                        openList.Remove(newNodeTmp);
                                         closedList.Remove(newNodeTmp);
                                         break;
                                     case AStarNode.NodeState.Unvisited:
@@ -98,6 +140,13 @@ namespace PathFinding
                                 }
 
                                 curNode.SetChildNode(ref newNodeTmp);
+                                //move curNode to openList
+                                openList.Add(newNodeTmp);
+
+                                //if (!openList.Exists(x=>x==curNode))
+                                //{
+                                //    openList.Add(curNode);
+                                //}
 
                             }
                         }
@@ -105,7 +154,8 @@ namespace PathFinding
                 }
 
 
-            } while (SearchEnd);
+            } while (!SearchEnd);
+            return searchResult;
         }
 
 
@@ -134,6 +184,26 @@ namespace PathFinding
 
             }
 
+            public void PathReset() 
+            {
+                for (int i = 0; i < Width; i++)
+                {
+                    for (int j = 0; j < Height; j++)
+                    {
+                        Data[i][j].Cost = int.MaxValue;
+                        Data[i][j].Risk = int.MaxValue;
+                        Data[i][j].TotalCost = int.MaxValue;
+
+                        Data[i][j].ParentNode = null;
+                        Data[i][j].State = AStarNode.NodeState.Unvisited;
+                    }
+                }
+            }
+
+            public int SetAllNodeRisk(int targetIndex)
+            {
+                return SetAllNodeRisk(targetIndex % Width , targetIndex / Height);
+            }
             public int SetAllNodeRisk(int targetX,int targetY)
             {
                 AStarNode tarNode = Data[targetX][targetY];

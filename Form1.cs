@@ -36,15 +36,16 @@ namespace aStar
             //aStar = new PathFinding.AStar();
             //aStar_fake = new PathFinding.AStar_fake(MapSize, MapStartIndex, MapEndIndex, MapData);
 
-            bool findPath = PathFinding.AStar.FindPath(MapStartIndex, MapEndIndex, aStarMap, out PathIndex);
-            //bool findPath = aStar_fake.FindPath();
+
+            bestPath = null;
+            bool findPath = PathFinding.AStar.FindPath(MapStartIndex, MapEndIndex,ref aStarMap, out bestPath) == 0;
             if (findPath == false)
             {
                 MessageBox.Show("沒有從起點移動至終點的路徑,請修改地圖");
             }
             else
             {
-                PathIndex = null;
+                //PathIndex = null;
                 //aStar_fake.TraceBack(ref PathIndex);
                 DrawMap();
             }
@@ -62,8 +63,8 @@ namespace aStar
         /// <summary>終點座標索引</summary>
         int MapEndIndex = 0;
         /// <summary>最佳路徑</summary>
-        List<int> PathIndex = null;
-
+        //List<int> PathIndex = null;
+        List<PathFinding.AStar.AStarNode> bestPath;
 
         /// <summary>地圖資訊</summary>
         //int[] MapData = null;
@@ -94,12 +95,11 @@ namespace aStar
 
             }
 
-
-
             //初始化起終點
             MapStartIndex = MapSize + 1;
             MapEndIndex = MapSize * MapSize - MapSize - 2;
-            PathIndex = null;
+            //PathIndex = null;
+            bestPath = null;
             DrawMap();
 
         }
@@ -107,9 +107,9 @@ namespace aStar
 
         private void DrawMap()
         {
-            DrawMap(MapSize, MapCellSize, aStarMap, MapStartIndex, MapEndIndex, PathIndex);
+            DrawMap(MapSize, MapCellSize, aStarMap, MapStartIndex, MapEndIndex, bestPath);
         }
-        private void DrawMap(int mapSize, int mapCellSize, PathFinding.AStar.AStarMap mapData, int startIndex, int endIndex, List<int> pathIndex = null)
+        private void DrawMap(int mapSize, int mapCellSize, PathFinding.AStar.AStarMap mapData, int startIndex, int endIndex, List<PathFinding.AStar.AStarNode> bestPath = null)
         {
 
             int mapCellCenter = mapCellSize / 2;
@@ -128,21 +128,29 @@ namespace aStar
             {
                 throw new ApplicationException();
             }
+            for (int i = 0; i < mapData.Width; i++)
+            {
+                for (int j = 0; j < mapData.Height; j++)
+                {
+                    int x = i * mapCellSize;
+                    int y = j * mapCellSize + +mapCellCenter;
+                    g.DrawLine(mapInf[mapData[i][j].Value], x, y, x + mapCellSize, y);
+                }
+            }
+
             for (int i = 0, length = mapData.Size; i < length; i++)
             {
-                int x = (i % mapSize) * mapCellSize;
-                int y = (i / mapSize) * mapCellSize + +mapCellCenter;
-                g.DrawLine(mapInf[mapData.GetNodeFromIndex(i).Value], x, y, x + mapCellSize, y);
+
             }
 
             //畫上路徑
             Pen pathPen = new Pen(Color.LightBlue, mapCellSize); //用於填滿最短的區域
-            if (pathIndex != null)
+            if (bestPath != null)
             {
-                for (int i = 0, length = pathIndex.Count; i < length; i++)
+                for (int i = 0, length = bestPath.Count; i < length; i++)
                 {
-                    int x = (pathIndex[i] % mapSize) * mapCellSize;
-                    int y = (pathIndex[i] / mapSize) * mapCellSize + +mapCellCenter;
+                    int x = (bestPath[i].X) * mapCellSize;
+                    int y = (bestPath[i].Y) * mapCellSize + +mapCellCenter;
                     g.DrawLine(pathPen, x, y, x + mapCellSize, y);
                 }
             }
@@ -211,13 +219,13 @@ namespace aStar
         {
             int X = index % MapSize;
             int Y = index / MapSize;
-
             if (LastEditIndex == index)
             {
                 return;
             }
             //一旦編輯地圖, 路徑就失效
-            PathIndex = null;
+            //PathIndex = null;
+            bestPath = null;
 
             switch (MapEditMode)
             {
