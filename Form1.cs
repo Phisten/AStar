@@ -29,9 +29,6 @@ namespace aStar
         /// <param name="e"></param>
         private void PathFinding_Click(object sender, EventArgs e)
         {
-            //aStar = new PathFinding.AStar();
-            //aStar_fake = new PathFinding.AStar_fake(MapSize, MapStartIndex, MapEndIndex, MapData);
-
 
             bestPath = null;
             bool findPath = PathFinding.AStar.FindPath(MapStartIndex, MapEndIndex,ref aStarMap, out bestPath) == 0;
@@ -41,8 +38,6 @@ namespace aStar
             }
             else
             {
-                //PathIndex = null;
-                //aStar_fake.TraceBack(ref PathIndex);
                 DrawMap();
             }
 
