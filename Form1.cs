@@ -17,14 +17,10 @@ namespace aStar
             InitializeComponent();
         }
 
-        //PathFinding.AStar_fake aStar_fake;
-        //PathFinding.AStar aStar;
         private void Form1_Load(object sender, EventArgs e)
         {
             MapInit_Click(null, null);
         }
-
-
 
         /// <summary>
         /// 探索路徑
