@@ -17,7 +17,8 @@ namespace aStar
             InitializeComponent();
         }
 
-        PathFinding.AStar_fake aStar;
+        PathFinding.AStar_fake aStar_fake;
+        PathFinding.AStar aStar;
         private void Form1_Load(object sender, EventArgs e)
         {
             MapInit_Click(null, null);
@@ -32,8 +33,8 @@ namespace aStar
         /// <param name="e"></param>
         private void PathFinding_Click(object sender, EventArgs e)
         {
-            aStar = new PathFinding.AStar_fake(MapSize, MapStartIndex, MapEndIndex, MapData);
-            bool findPath = aStar.FindPath();
+            aStar_fake = new PathFinding.AStar_fake(MapSize, MapStartIndex, MapEndIndex, MapData);
+            bool findPath = aStar_fake.FindPath();
             if (findPath == false)
             {
                 MessageBox.Show("沒有從起點移動至終點的路徑,請修改地圖");
@@ -41,7 +42,7 @@ namespace aStar
             else
             {
                 PathIndex = null;
-                aStar.TraceBack(ref PathIndex);
+                aStar_fake.TraceBack(ref PathIndex);
                 DrawMap();
             }
 
@@ -61,6 +62,10 @@ namespace aStar
         int[] MapData = null;
         /// <summary>最佳路徑</summary>
         List<int> PathIndex = null;
+
+
+        PathFinding.AStar.AStarMap aStarMap;
+
         /// <summary>
         /// 建構地圖
         /// </summary>
@@ -72,15 +77,24 @@ namespace aStar
             MapCellSize = int.Parse(textBox4.Text);
             MapData = new int[MapSize * MapSize];
 
+
+            aStarMap = new PathFinding.AStar.AStarMap(MapSize, MapSize);
             //初始化地圖邊界
             for (int i = 0,length = MapSize; i < length; i++)
             {
+                aStarMap[0][i].Value = 1;
+                aStarMap[MapSize-1][i].Value = 1;
+                aStarMap[i][MapSize - 1].Value = 1;
+                aStarMap[i][0].Value = 1;
+
                 MapData[0 + i * MapSize] = 1;
                 MapData[MapSize - 1 + i * MapSize] = 1;
                 MapData[i] = 1;
                 MapData[i + (MapSize - 1) * MapSize] = 1;
 
             }
+
+
 
             //初始化起終點
             MapStartIndex = MapSize + 1;
@@ -93,11 +107,76 @@ namespace aStar
 
         private void DrawMap()
         {
-            DrawMap(MapSize, MapCellSize, MapData, MapStartIndex, MapEndIndex, PathIndex);
+            DrawMap(MapSize, MapCellSize, aStarMap, MapStartIndex, MapEndIndex, PathIndex);
         }
-        private void DrawMap(int mapSize, int mapCellSize,int[] mapData, int startIndex, int endIndex, List<int> pathIndex = null)
+        private void DrawMap(int mapSize, int mapCellSize, PathFinding.AStar.AStarMap mapData, int startIndex, int endIndex, List<int> pathIndex = null)
         {
-            
+
+            int mapCellCenter = mapCellSize / 2;
+
+            Bitmap b = new Bitmap(mapSize * mapCellSize, mapSize * mapCellSize);
+            Graphics g = Graphics.FromImage(b);
+
+
+            Pen zeroPen = new Pen(Color.White, mapCellSize); //用於填滿可通過的區域
+            Pen onePen = new Pen(Color.Black, mapCellSize); //用於填滿無法通過的區域
+            Pen linePen = new Pen(Color.Gray, 1); //用於填滿無法通過的區域
+
+            Pen[] mapInf = new Pen[] { zeroPen, onePen };
+            //根據地圖資料(mapData)填補地形
+            if (mapData == null)
+            {
+                throw new ApplicationException();
+            }
+            for (int i = 0, length = mapData.Size; i < length; i++)
+            {
+                int x = (i % mapSize) * mapCellSize;
+                int y = (i / mapSize) * mapCellSize + +mapCellCenter;
+                g.DrawLine(mapInf[mapData.GetNodeFromIndex(i).Value], x, y, x + mapCellSize, y);
+            }
+
+            //畫上路徑
+            Pen pathPen = new Pen(Color.LightBlue, mapCellSize); //用於填滿最短的區域
+            if (pathIndex != null)
+            {
+                for (int i = 0, length = pathIndex.Count; i < length; i++)
+                {
+                    int x = (pathIndex[i] % mapSize) * mapCellSize;
+                    int y = (pathIndex[i] / mapSize) * mapCellSize + +mapCellCenter;
+                    g.DrawLine(pathPen, x, y, x + mapCellSize, y);
+                }
+            }
+
+            //畫上起點
+            Pen startPen = new Pen(Color.Blue, mapCellSize);
+            int startX = (startIndex % mapSize) * mapCellSize;
+            int startY = (startIndex / mapSize) * mapCellSize + +mapCellCenter;
+            g.DrawLine(startPen, startX, startY, startX + mapCellSize, startY);
+
+            //畫上終點
+            Pen endPen = new Pen(Color.Red, mapCellSize);
+            int endX = (endIndex % mapSize) * mapCellSize;
+            int endY = (endIndex / mapSize) * mapCellSize + +mapCellCenter;
+            g.DrawLine(endPen, endX, endY, endX + mapCellSize, endY);
+
+            //畫上外框
+            //g.DrawRectangle(onePen, mapCellCenter, mapCellCenter, mapCellSize * (mapSize - 1) , mapCellSize * (mapSize - 1) );
+            //畫上網格
+            for (int i = 1; i < mapSize; i++)
+            {
+                g.DrawLine(linePen, 0, i * mapCellSize, mapSize * mapCellSize, i * mapCellSize);
+                g.DrawLine(linePen, i * mapCellSize, 0, i * mapCellSize, mapSize * mapCellSize);
+            }
+
+
+            pic1.Image = b;
+            pic1.ClientSize = b.Size;
+
+        }
+
+        private void DrawMap(int mapSize, int mapCellSize, int[] mapData, int startIndex, int endIndex, List<int> pathIndex = null)
+        {
+
             int mapCellCenter = mapCellSize / 2;
 
             Bitmap b = new Bitmap(mapSize * mapCellSize, mapSize * mapCellSize);
@@ -132,7 +211,7 @@ namespace aStar
                     g.DrawLine(pathPen, x, y, x + mapCellSize, y);
                 }
             }
-            
+
             //畫上起點
             Pen startPen = new Pen(Color.Blue, mapCellSize);
             int startX = (startIndex % mapSize) * mapCellSize;

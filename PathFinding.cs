@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows.Forms;
 
 namespace PathFinding
 {
@@ -9,9 +10,24 @@ namespace PathFinding
     {
         public static int FindPath(int startNodeIndex, int endNodeIndex, ref AStarMap map, out List<AStarNode> bestPath)
         {
+            //input check
+            if (startNodeIndex < 0 || startNodeIndex >= map.Size)
+            {
+                throw new ApplicationException();
+            }
+            if (endNodeIndex < 0 || endNodeIndex >= map.Size)
+            {
+                throw new ApplicationException();
+            }
+            if (map == null)
+            {
+                throw new ApplicationException();
+            }
+            
+            //init
             int Start = startNodeIndex;
             int end = endNodeIndex;
-            int curNode = Start;
+            int curNodeIndex = Start;
 
             List<AStarNode> openList = new List<AStarNode>();
             List<AStarNode> closedList = new List<AStarNode>();
@@ -20,76 +36,76 @@ namespace PathFinding
             openList[0].Risk = map.GetGridDistance(startNodeIndex, endNodeIndex);
             openList[0].State = AStarNode.NodeState.Open;
 
+            PathTestLoop(endNodeIndex, map, openList, closedList);
+
+
+            bestPath = new List<AStarNode>();
+            return 0;
+        }
+
+        private static void PathTestLoop(int endNodeIndex, AStarMap map, List<AStarNode> openList, List<AStarNode> closedList)
+        {
+            //path finding loop
+            bool SearchEnd = false;
             do
             {
-                //拓展目前風險最低(預計未消耗成本最低)的節點 展開其周邊的未探索節點,將其標記為Open
+                //檢查OpenList內是否還有待探索節點, 無則表示已無活路或皆搜索完畢
+                if (openList.Count == 0)
+                    SearchEnd = true;
+
+                //get the Node of lowest total cost
+                AStarNode curNode = openList[0];
+                for (int i = 0, length = openList.Count; i < length; i++)
+                    if (curNode.TotalCost > openList[i].TotalCost)
+                        curNode = openList[i];
+
+                //Expansion Neighboring Node , label their Open
                 for (int i = -1; i < 3; i++)
                 {
+                    int X = curNode.X + i;
                     for (int j = -1; j < 3; j++)
                     {
-                        if (map[i][j].Value == 0 && //Value 0 代表可通過 無障礙物
-                            
-                            ) 
+                        int Y = curNode.Y + j;
+                        if (X >= 0 && X < map.Width && Y >= 0 && Y < map.Height) //未超過地圖邊界
                         {
-                            
+                            AStarNode newNodeTmp = map[X][Y];
+                            if (newNodeTmp.Value == 0 &&  //Value 0 代表可通過 無障礙物
+                                newNodeTmp != curNode) //排除Comparison by self
+                            {
+                                // if is endPoint
+                                if (newNodeTmp.Index == endNodeIndex)
+                                {
+                                    SearchEnd = true;
+                                }
+
+                                //if newNode is open or close, select better
+                                switch (newNodeTmp.State)
+                                {
+                                    case AStarNode.NodeState.Open:
+                                    case AStarNode.NodeState.Close:
+                                        // if newPath is not better
+                                        if (newNodeTmp.Cost <= curNode.Cost + 1)
+                                        {
+                                            continue;
+                                        }
+                                        closedList.Remove(newNodeTmp);
+                                        break;
+                                    case AStarNode.NodeState.Unvisited:
+                                        break;
+                                    default:
+                                        throw new ApplicationException();
+                                        break;
+                                }
+
+                                curNode.SetChildNode(ref newNodeTmp);
+
+                            }
                         }
                     }
                 }
 
-                
 
-                //把起始位置放入已經搜尋過的矩陣內
-
-
-                        //取出目前的位置
-                        CurrentLocation = (int)ClosedNode[ClosedSize, 0];
-
-                        //Remove node from Fringe().把目前的節點由Open矩陣內移除
-                        RemoveNodeFromOpen(CurrentLocation);
-
-                        //Add children to Open().計算Open矩陣內的3x3矩陣距離目標的長短，並排序之
-                        TrySurroundingOpenNode(CurrentLocation);
-
-                        //Return new CurrentLocation.
-                        ReturnValue = CurrentLocation;
-
-/*
-Add START to OPEN list
-
-while OPEN not empty
-
-get node n from OPEN that has the lowest f(n)
-
-if n is GOAL then return path
-
-move n to CLOSED
-
-for each n' = CanMove(n, direction)
-
-g(n') = g(n) + 1
-
-calculate h(n')
-
-if n' in OPEN list and new n' is not better, continue
-
-if n' in CLOSED list and new n' is not better, continue
-
-remove any n' from OPEN and CLOSED
-
-add n as n's parent
-
-add n' to OPEN
-
-end for
-
-end while
-
-if we get to here, then there is No Solution   */
-            } while (true);
-
-
-
-            return 0;
+            } while (SearchEnd);
         }
 
 
@@ -100,17 +116,6 @@ if we get to here, then there is No Solution   */
             public int Width;
             public int Height;
             public int Size;
-            public List<AStarNode> this[int index]
-            {
-                get { return Data[index]; }
-                set { Data[index] = value; }
-            }
-
-            //public AStarNode GetNodeFromCoordinate(int X, int Y)
-            //{
-            //    return Data[X][Y];
-            //}
-
 
             public AStarMap(int width, int height)
             {
@@ -120,7 +125,7 @@ if we get to here, then there is No Solution   */
                 Data = new List<List<AStarNode>>(Width);
                 for (int i = 0; i < Width; i++)
                 {
-                    Data[i] = new List<AStarNode>(Height);
+                    Data.Add(new List<AStarNode>(Height));
                     for (int j = 0; j < Height; j++)
                     {
                         Data[i].Add(new AStarNode() { Index = i + Height * j, X = i, Y = j });
@@ -129,13 +134,46 @@ if we get to here, then there is No Solution   */
 
             }
 
-            public AStarNode GetNodeFromIndex(int index)
+            public int SetAllNodeRisk(int targetX,int targetY)
             {
-                return Data[index % Size][index / Size];
+                AStarNode tarNode = Data[targetX][targetY];
+
+                for (int i = 0; i < Width; i++)
+                    for (int j = 0; j < Height; j++)
+                        Data[i][j].Risk = Data[i][j].GetGridDistance(tarNode);
+
+                return (int)AStarMapErrorCode.Success;
             }
 
+            #region 透過索引或座標取得地圖資訊
             /// <summary>
-            /// 
+            /// 透過座標取得地圖資訊傳入值為[X][Y]
+            /// </summary>
+            /// <param name="X">水平座標</param>
+            /// <returns></returns>
+            public List<AStarNode> this[int X]
+            {
+                get { return Data[X]; }
+                set { Data[X] = value; }
+            }
+            /// <summary>
+            /// 透過索引取得地圖資訊
+            /// </summary>
+            /// <param name="index"></param>
+            /// <returns></returns>
+            public AStarNode GetNodeFromIndex(int index)
+            {
+                return Data[index % Width][index / Width];
+            }
+            //public AStarNode GetNodeFromCoordinate(int X, int Y)
+            //{
+            //    return Data[X][Y];
+            //}
+            #endregion
+
+            #region 座標轉換與距離計算 
+            /// <summary>
+            /// 取得兩座標在地圖中的最短網格距離(不考慮障礙)
             /// </summary>
             /// <param name="X1"></param>
             /// <param name="Y1"></param>
@@ -146,25 +184,64 @@ if we get to here, then there is No Solution   */
             {
                 return Math.Abs((X1 - X2) - (Y1 - Y2));
             }
+            /// <summary>
+            /// 取得兩索引在地圖中的最短網格距離(不考慮障礙)
+            /// </summary>
+            /// <param name="index1"></param>
+            /// <param name="index2"></param>
+            /// <returns></returns>
             public int GetGridDistance(int index1, int index2)
             {
                 return Math.Abs((index1 % Size - index2 % Size) - (index1 / Size - index2 / Size));
             }
+            #endregion
+
+
+
+            public enum AStarMapErrorCode { Success }
         }
 
 
         public class AStarNode
         {
+            //base
             public int Value;
             public int Index;
             public int X;
             public int Y;
+
+            //path data
             public int TotalCost; //func F 值越低越好
-            public int Cost = 0; //func G
+            public int Cost = int.MaxValue; //func G
             public int Risk = int.MaxValue; //func H
+            public AStarNode ParentNode = null;
             public NodeState State = NodeState.Unvisited;
 
             public enum NodeState { Unvisited, Open, Close };
+
+            /// <summary>
+            /// 將傳入節點設定為子節點,並將狀態設為open
+            /// </summary>
+            /// <param name="childNode"></param>
+            /// <returns></returns>
+            public int SetChildNode(ref AStarNode childNode)
+            {
+                if (childNode == null)
+                    return (int)AStarNodeErrorCode.childNode_Is_Null;
+
+                childNode.ParentNode = this;
+                childNode.Cost = this.Cost + 1;
+                childNode.State = NodeState.Open;
+
+                return (int)AStarNodeErrorCode.Success;
+            }
+
+            public int GetGridDistance(AStarNode targetNode)
+            {
+                return Math.Abs((this.X - targetNode.X) - (this.Y - targetNode.Y));
+            }
+
+            public enum AStarNodeErrorCode { Success, childNode_Is_Null }
         }
     }
 
