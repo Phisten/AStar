@@ -17,7 +17,7 @@ namespace aStar
             InitializeComponent();
         }
 
-        PathFinding.AStar aStar;
+        PathFinding.AStar_fake aStar;
         private void Form1_Load(object sender, EventArgs e)
         {
             MapInit_Click(null, null);
@@ -32,8 +32,8 @@ namespace aStar
         /// <param name="e"></param>
         private void PathFinding_Click(object sender, EventArgs e)
         {
-            aStar = new PathFinding.AStar(MapSize, MapStartIndex, MapEndIndex, MapData);
-            bool findPath = aStar.FindPathFunction();
+            aStar = new PathFinding.AStar_fake(MapSize, MapStartIndex, MapEndIndex, MapData);
+            bool findPath = aStar.FindPath();
             if (findPath == false)
             {
                 MessageBox.Show("沒有從起點移動至終點的路徑,請修改地圖");
@@ -85,6 +85,7 @@ namespace aStar
             //初始化起終點
             MapStartIndex = MapSize + 1;
             MapEndIndex = MapSize * MapSize - MapSize - 2;
+            PathIndex = null;
             DrawMap();
 
         }
@@ -259,11 +260,13 @@ namespace aStar
         private void pic1_MouseUp(object sender, MouseEventArgs e)
         {
             MousePress = false;
+            LastEditIndex = -1;
         }
 
         private void pic1_MouseLeave(object sender, EventArgs e)
         {
             MousePress = false;
+            LastEditIndex = -1;
         }
 
 

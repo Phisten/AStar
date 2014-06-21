@@ -7,3 +7,10 @@ D:\Phisten\GoogleCloud\project\aStar\aStar\obj\Debug\aStar.Properties.Resources.
 D:\Phisten\GoogleCloud\project\aStar\aStar\obj\Debug\aStar.csproj.GenerateResource.Cache
 D:\Phisten\GoogleCloud\project\aStar\aStar\obj\Debug\aStar.exe
 D:\Phisten\GoogleCloud\project\aStar\aStar\obj\Debug\aStar.pdb
+D:\Phisten\Google\project\aStar\aStar\bin\Debug\aStar.exe.config
+D:\Phisten\Google\project\aStar\aStar\obj\Debug\aStar.exe
+D:\Phisten\Google\project\aStar\aStar\obj\Debug\aStar.pdb
+D:\Phisten\Google\project\aStar\aStar\obj\Debug\aStar.csprojResolveAssemblyReference.cache
+D:\Phisten\Google\project\aStar\aStar\obj\Debug\aStar.Form1.resources
+D:\Phisten\Google\project\aStar\aStar\obj\Debug\aStar.Properties.Resources.resources
+D:\Phisten\Google\project\aStar\aStar\obj\Debug\aStar.csproj.GenerateResource.Cache

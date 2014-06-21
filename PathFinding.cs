@@ -5,14 +5,174 @@ using System.Text;
 
 namespace PathFinding
 {
-    /// <summary>
-    /// 在一個地圖中,我們要搜尋從A點到B點的最低成本路徑,
-    /// 所得的最短路徑為一個節點陣列,
-    /// 為路徑通過的結點在連續的空間環境中,
-    /// 可能較難建立節點,因為鄰近結點之間要能相通,
-    /// 在方塊世界比較容易
-    /// </summary>
     public class AStar
+    {
+        public static int FindPath(int startNodeIndex, int endNodeIndex, ref AStarMap map, out List<AStarNode> bestPath)
+        {
+            int Start = startNodeIndex;
+            int end = endNodeIndex;
+            int curNode = Start;
+
+            List<AStarNode> openList = new List<AStarNode>();
+            List<AStarNode> closedList = new List<AStarNode>();
+
+            openList.Add(map.GetNodeFromIndex(startNodeIndex));
+            openList[0].Risk = map.GetGridDistance(startNodeIndex, endNodeIndex);
+            openList[0].State = AStarNode.NodeState.Open;
+
+            do
+            {
+                //拓展目前風險最低(預計未消耗成本最低)的節點 展開其周邊的未探索節點,將其標記為Open
+                for (int i = -1; i < 3; i++)
+                {
+                    for (int j = -1; j < 3; j++)
+                    {
+                        if (map[i][j].Value == 0 && //Value 0 代表可通過 無障礙物
+                            
+                            ) 
+                        {
+                            
+                        }
+                    }
+                }
+
+                
+
+                //把起始位置放入已經搜尋過的矩陣內
+
+
+                        //取出目前的位置
+                        CurrentLocation = (int)ClosedNode[ClosedSize, 0];
+
+                        //Remove node from Fringe().把目前的節點由Open矩陣內移除
+                        RemoveNodeFromOpen(CurrentLocation);
+
+                        //Add children to Open().計算Open矩陣內的3x3矩陣距離目標的長短，並排序之
+                        TrySurroundingOpenNode(CurrentLocation);
+
+                        //Return new CurrentLocation.
+                        ReturnValue = CurrentLocation;
+
+/*
+Add START to OPEN list
+
+while OPEN not empty
+
+get node n from OPEN that has the lowest f(n)
+
+if n is GOAL then return path
+
+move n to CLOSED
+
+for each n' = CanMove(n, direction)
+
+g(n') = g(n) + 1
+
+calculate h(n')
+
+if n' in OPEN list and new n' is not better, continue
+
+if n' in CLOSED list and new n' is not better, continue
+
+remove any n' from OPEN and CLOSED
+
+add n as n's parent
+
+add n' to OPEN
+
+end for
+
+end while
+
+if we get to here, then there is No Solution   */
+            } while (true);
+
+
+
+            return 0;
+        }
+
+
+        public class AStarMap
+        {
+            private List<List<AStarNode>> Data; // Data[W or X][H or Y]
+
+            public int Width;
+            public int Height;
+            public int Size;
+            public List<AStarNode> this[int index]
+            {
+                get { return Data[index]; }
+                set { Data[index] = value; }
+            }
+
+            //public AStarNode GetNodeFromCoordinate(int X, int Y)
+            //{
+            //    return Data[X][Y];
+            //}
+
+
+            public AStarMap(int width, int height)
+            {
+                this.Width = width;
+                this.Height = height;
+                Size = Width * Height;
+                Data = new List<List<AStarNode>>(Width);
+                for (int i = 0; i < Width; i++)
+                {
+                    Data[i] = new List<AStarNode>(Height);
+                    for (int j = 0; j < Height; j++)
+                    {
+                        Data[i].Add(new AStarNode() { Index = i + Height * j, X = i, Y = j });
+                    }
+                }
+
+            }
+
+            public AStarNode GetNodeFromIndex(int index)
+            {
+                return Data[index % Size][index / Size];
+            }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="X1"></param>
+            /// <param name="Y1"></param>
+            /// <param name="X2"></param>
+            /// <param name="Y2"></param>
+            /// <returns></returns>
+            public int GetGridDistance(int X1, int Y1, int X2, int Y2)
+            {
+                return Math.Abs((X1 - X2) - (Y1 - Y2));
+            }
+            public int GetGridDistance(int index1, int index2)
+            {
+                return Math.Abs((index1 % Size - index2 % Size) - (index1 / Size - index2 / Size));
+            }
+        }
+
+
+        public class AStarNode
+        {
+            public int Value;
+            public int Index;
+            public int X;
+            public int Y;
+            public int TotalCost; //func F 值越低越好
+            public int Cost = 0; //func G
+            public int Risk = int.MaxValue; //func H
+            public NodeState State = NodeState.Unvisited;
+
+            public enum NodeState { Unvisited, Open, Close };
+        }
+    }
+
+
+
+
+
+    public class AStar_fake
     {
         //地圖大小
         private int MapSize = 13;
@@ -24,129 +184,70 @@ namespace PathFinding
         private int CurrentLocation;//目前位置
 
         //Current location 邊緣矩陣
-        private double[,] OpenMatrix;
+        private double[,] OpenNode;
         //邊緣矩陣大小
         private int OpenSize = 0;
         //OPEN表保存了所有已生成而未考察的節點，CLOSED表中記錄已訪問過的節點。
-        private double[,] ClosedMatrix;
-        //OPEN表保存了所有已生成而未考察的節點，CLOSED表中記錄已訪問過的節點。
+        private double[,] ClosedNode;
         private int ClosedSize = 0;
-        //資料矩陣大小
-        private int[] Map = new int[] { 
-1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
-1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 
-1, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 1, 
-1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 
-1, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1, 
-1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 
-1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 
-1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 
-1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 
-1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-
+        private int[] Map;
 
         /// <summary>
-        /// 建構子
+        /// ASTAT初始化
         /// </summary>
         /// <param name="MapSize">矩陣大小</param>
         /// <param name="StartLocation">起始位置</param>
         /// <param name="GoalLocation">目的位置</param>
         /// <param name="Map">地圖資料</param>
-        public AStar(int MapSize, int StartLocation, int GoalLocation, int[] Map)
+        public AStar_fake(int MapSize, int StartLocation, int GoalLocation, int[] Map)
         {
             this.MapSize = MapSize;
             this.StartLocation = StartLocation;
             this.GoalLocation = GoalLocation;
-            this.OpenMatrix = new double[(int)Math.Pow(MapSize, 2) + 1, 3];
-            this.ClosedMatrix = new double[(int)Math.Pow(MapSize, 2) + 1, 3];
+            this.OpenNode = new double[(int)Math.Pow(MapSize, 2) + 1, 4];
+            this.ClosedNode = new double[(int)Math.Pow(MapSize, 2) + 1, 4];
             this.Map = Map;
         }
 
-        /// <summary>
-        /// 目的位置
-        /// </summary>
-        public int GoalLocationPoint
+        public bool FindPath()
         {
-            set { this.GoalLocation = value; }
-            get { return this.GoalLocation; }
-        }
+            Initialize();
 
-        /// <summary>
-        /// 起始位置
-        /// </summary>
-        public int StartLocationPoint
-        {
-            set { this.StartLocation = value; }
-            get { return this.StartLocation; }
-        }
-
-        /// <summary>
-        /// 找出路徑
-        /// </summary>
-        /// <returns></returns>
-        public bool FindPathFunction()
-        {
-            try
+            while (!(CurrentLocation == GoalLocation))
             {
-                Initialize();
-
-                //int i = 0;
-                //目前位置，還不是目的端位置
-                while (!(CurrentLocation == GoalLocation))
+                //開始找路徑
+                if (FindNewNode() == 0)
                 {
-                    //開始找路徑
-                    if (FindRoute().Equals(0))
-                    {
-                        //break;//當找不到就離開避免進入無窮迴圈
-                        return false;
-                    }
+                    return false;
                 }
+            }
 
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                return false;
-            }
+            return true;
         }
+
         /// <summary>
         /// 初始化矩陣空間
         /// </summary>
         private void Initialize()
         {
             CurrentLocation = StartLocation;//把起始位置存放入目前位置
-            OpenMatrix[0, 0] = CurrentLocation;//存放目前位置
-            OpenMatrix[0, 1] = 0;//目前父結點位置
-            OpenMatrix[0, 2] = GetL2(CurrentLocation, GoalLocation);//與目的位置相隔多少距離
+            OpenNode[0, 0] = CurrentLocation;//存放目前位置
+            OpenNode[0, 1] = 0;//目前父結點位置
+            OpenNode[0, 2] = GetDirectDistance(CurrentLocation, GoalLocation);//與目的位置的直線距離
+            OpenNode[0, 3] = 0; //目前測出的 移動至此節點所需的最短步數
 
-            //把Fringe陣列全部清空
-            for (int i = 1; i <= (Math.Pow(MapSize, 2)); i++)
-            {
-                for (int j = 0; j < 3; j++)
-                {
-                    OpenMatrix[i, j] = 0;
-                }
-            }
+            //設為-1 代表未循覽過
+            for (int i = 0; i <= (MapSize*MapSize); i++)
+                for (int j = 0; j < 4; j++)
+                    ClosedNode[i, j] = -1;
 
-            //把CLOSED表中記錄已訪問過的節點，紀錄為-1表示未曾拜訪過。
-            for (int i = 0; i <= (Math.Pow(MapSize, 2)); i++)
-            {
-                for (int j = 0; j < 3; j++)
-                {
-                    ClosedMatrix[i, j] = -1;
-                }
-            }
         }
 
         /// <summary>
         /// 找出路徑
         /// </summary>
         /// <returns></returns>
-        private int FindRoute()
+        private int FindNewNode()
         {
             //Returns GoalLocation if a route has been completely found,
             // or the next node of the route,
@@ -158,7 +259,7 @@ namespace PathFinding
             * 反之，則傳回下一個位置
             * 或者，如果找不到就回傳0
             */
-            if (OpenMatrix[0, 0] == 0)
+            if (OpenNode[0, 0] == 0)
             {
                 //在起始位置與結束位置間沒有任何的路徑
                 //No route exists between start and goal.
@@ -167,13 +268,13 @@ namespace PathFinding
             else
             {
                 //已經找到最後的位置GoalLocation
-                if (OpenMatrix[0, 0] == GoalLocation)
+                if (OpenNode[0, 0] == GoalLocation)
                 {
                     //Add node to ClosedList.
                     //增加目前的節點到拜訪過的矩陣中ClosedList
-                    for (int i = 0; i < 3; i++)
+                    for (int i = 0; i < 4; i++)
                     {
-                        ClosedMatrix[ClosedSize, i] = OpenMatrix[0, i];
+                        ClosedNode[ClosedSize, i] = OpenNode[0, i];
                     }
                     //return RouteNode.
                     CurrentLocation = GoalLocation;
@@ -181,18 +282,18 @@ namespace PathFinding
                 }
                 else//持續找尋
                 {
-                    //表示OpenMatrix起始位置未被蒐尋過
-                    if (CheckCloseListForNode((int)OpenMatrix[0, 0]) == false)//起始位置
-                    {
+                    ////表示OpenNode未被蒐尋過
+                    //if (IsCloseNode((int)OpenNode[0, 0]) == false)//起始位置 
+                    //{
                         //Add node to ClosedList.
                         //把起始位置放入已經搜尋過的矩陣內
-                        for (int i = 0; i < 3; i++)
+                        for (int i = 0; i < 4; i++)
                         {
-                            ClosedMatrix[ClosedSize, i] = OpenMatrix[0, i];
+                            ClosedNode[ClosedSize, i] = OpenNode[0, i];
                         }
 
                         //取出目前的位置
-                        CurrentLocation = (int)ClosedMatrix[ClosedSize, 0];
+                        CurrentLocation = (int)ClosedNode[ClosedSize, 0];
 
                         //以搜尋過的路徑增加
                         ClosedSize += 1;
@@ -201,11 +302,11 @@ namespace PathFinding
                         RemoveNodeFromOpen(CurrentLocation);
 
                         //Add children to Open().計算Open矩陣內的3x3矩陣距離目標的長短，並排序之
-                        AddChildrenToOpen(CurrentLocation);
+                        TrySurroundingOpenNode(CurrentLocation);
 
                         //Return new CurrentLocation.
                         ReturnValue = CurrentLocation;
-                    }
+                    //}
                 }
 
             }
@@ -213,10 +314,10 @@ namespace PathFinding
         }
 
         /// <summary>
-        /// 增加3x3可能路徑
+        /// 測試周邊節點是否可走
         /// </summary>
         /// <param name="ParentNode"></param>
-        private void AddChildrenToOpen(int ParentNode)
+        private void TrySurroundingOpenNode(int ParentNode)
         {
             //Check the ParentNode's surrounding nodes.
             int index = 0;
@@ -225,32 +326,26 @@ namespace PathFinding
                 for (int j = -1; j < 2; j++)
                 {
                     index = ParentNode + MapSize * i + j;
-                    if (Map[index] != 1
-                    && Map[index] == 0)//表示非邊緣，且有路徑可以走
+                    if (index >= 0 && index < MapSize * MapSize && Map[index] != 1 && Map[index] == 0)//表示非邊緣，且有路徑可以走
                     {
-                        //Check to see if it's already in the ClosedList.檢查此點是否已經在Cose矩陣內，不是的話，加入Open矩陣內
-                        if (CheckCloseListForNode(index) == false)
+                        //Check to see if it's already in the ClosedList.
+                        if (IsCloseNode(index) == false)
                         {
                             OpenSize += 1;
-                            //Add child node to Open矩陣
-                            OpenMatrix[OpenSize, 0] = index;//可以嘗試的路徑(目前結點)
-                            OpenMatrix[OpenSize, 1] = ParentNode;//目前父結點位置
-                            OpenMatrix[OpenSize, 2] = GetL2(index, GoalLocation);//計算目前結點與目標結點的歐幾里得距離 
+                            //Add child node to OpenList
+                            OpenNode[OpenSize, 0] = index;//可以嘗試的路徑(目前結點)
+                            OpenNode[OpenSize, 1] = ParentNode;//目前父結點位置
+                            OpenNode[OpenSize, 2] = GetDirectDistance(index, GoalLocation);//計算目前結點與目標結點的歐幾里得距離 
+                            OpenNode[OpenSize, 3] = OpenNode[ParentNode, 3] + 1; //目前消耗步數
                         }
                     }
                 }
                 //Start the next row down.
             }
-            SortList();//排序矩陣
+            SortOpenNode();//排序矩陣
         }
 
-        /// <summary>
-        /// 歐幾里得距離
-        /// </summary>
-        /// <param name="CurrentLoc"></param>
-        /// <param name="GoalLoc"></param>
-        /// <returns></returns>
-        private double GetL2(int CurrentLoc, int GoalLoc)
+        private double GetDirectDistance(int CurrentLoc, int GoalLoc)
         {
             int X1 = 0;
             int X2 = 0;
@@ -259,69 +354,62 @@ namespace PathFinding
             double DX = 0;
             double DY = 0;
 
-            X1 = CurrentLoc % MapSize;//取得餘數 Column's Value
-            X2 = GoalLoc % MapSize;//取得餘數 Column's Value
+            X1 = CurrentLoc % MapSize;
+            X2 = GoalLoc % MapSize;
 
-            Y1 = (int)Math.Floor(CurrentLoc / (double)MapSize);//取得商數 Row's Value
-            Y2 = (int)Math.Floor(GoalLoc / (double)MapSize);//取得商數 Row's Value
+            Y1 = (int)Math.Floor(CurrentLoc / (double)MapSize);
+            Y2 = (int)Math.Floor(GoalLoc / (double)MapSize);
 
             DX = Math.Abs(X2 - X1);//X軸
             DY = Math.Abs(Y2 - Y1);//Y軸
 
-            return Math.Sqrt(Math.Pow(DX, 2) + Math.Pow(DY, 2));//歐幾里得距離
+            return Math.Sqrt(Math.Pow(DX, 2) + Math.Pow(DY, 2));
 
         }
 
         /// <summary>
-        /// 檢查這個節點是否已經被蒐尋過，事的話回傳true，反之false
+        /// 檢查這個節點是否已被蒐尋過
         /// </summary>
-        /// <param name="NodeLocation"></param>
+        /// <param name="NodeIndex"></param>
         /// <returns></returns>
-        private bool CheckCloseListForNode(int NodeLocation)
+        private bool IsCloseNode(int NodeIndex)
         {
-            bool ItemFound = false;
-
             for (int i = 0; i < ClosedSize; i++)
-            {
-                if (ClosedMatrix[i, 0] == NodeLocation)
-                {
-                    ItemFound = true;
-                    break;
-                }
-            }
-
-            return ItemFound;
+                if (ClosedNode[i, 0] == NodeIndex)
+                    return true;
+            return false;
         }
 
         /// <summary>
         /// 排序目前的Open矩陣，依據歐幾里得距離
         /// </summary>
-        private void SortList()
+        private void SortOpenNode()
         {
+            //氣泡 升序
             //排序Open矩陣依據歐幾里得距離進行升序排序
             //Sort Open Matrix in ascending order of Distance + L2(smallest at start, largest at end).
-            double[] TempArray = new double[3];
+            double[] TempArray = new double[4];
 
             for (int i = 0; i < OpenSize; i++)
             {
                 for (int j = i + 1; j <= OpenSize; j++)
                 {
-                    if (OpenMatrix[i, 2] > OpenMatrix[j, 2])//如果i比較j大就交換
+                    if (OpenNode[i, 2] > OpenNode[j, 2])//如果i比較j大就交換
                     {
                         //Copy succeeding element from Fringe() to TempArray().
                         for (int k = 0; k < TempArray.Length; k++)
                         {
-                            TempArray[k] = OpenMatrix[j, k];
+                            TempArray[k] = OpenNode[j, k];
                         }
                         //Copy Fringe() element to succeeding Fringe() element.
                         for (int k = 0; k < TempArray.Length; k++)
                         {
-                            OpenMatrix[j, k] = OpenMatrix[i, k];
+                            OpenNode[j, k] = OpenNode[i, k];
                         }
                         //Copy TempArray() to preceeding Fringe() element. 
                         for (int k = 0; k < TempArray.Length; k++)
                         {
-                            OpenMatrix[i, k] = TempArray[k];
+                            OpenNode[i, k] = TempArray[k];
                         }
                     }
                 }
@@ -336,15 +424,15 @@ namespace PathFinding
         {
             //從open矩陣移除關連到CurrentLocation的結點
             //Removes all references to CurrentLocation from Fringe().
-            double[,] TempArray = new double[OpenSize, 3];
+            double[,] TempArray = new double[OpenSize, 4];
             int k = 0;
             for (int i = 0; i <= OpenSize; i++)
             {
-                if (OpenMatrix[i, 0] != Node)//open矩陣不包括CurrentLocation的結點
+                if (OpenNode[i, 0] != Node)//open矩陣不包括CurrentLocation的結點
                 {
-                    for (int j = 0; j < 3; j++)//將open矩陣記錄到暫存矩陣TempArray
+                    for (int j = 0; j < 4; j++)//將open矩陣記錄到暫存矩陣TempArray
                     {
-                        TempArray[k, j] = OpenMatrix[i, j];
+                        TempArray[k, j] = OpenNode[i, j];
                     }
                     k++;
                 }
@@ -352,34 +440,13 @@ namespace PathFinding
 
             for (int i = 0; i < k; i++)
             {
-                for (int j = 0; j < 3; j++)
+                for (int j = 0; j < 4; j++)
                 {
-                    OpenMatrix[i, j] = TempArray[i, j];//將TempArray暫存矩陣轉存到矩陣open
+                    OpenNode[i, j] = TempArray[i, j];//將TempArray暫存矩陣轉存到矩陣open
                 }
             }
 
             OpenSize = k - 1;
-        }
-
-        /// <summary>
-        /// 列印出Closed矩陣資料
-        /// </summary>
-        public string PrintClosedMatrix()
-        {
-            int i = 0;
-            int j = 0;
-            string TempString = null;
-
-            for (i = 0; i <= ClosedSize; i++)
-            {
-                for (j = 0; j < 2; j++)
-                {
-                    TempString += Convert.ToString(ClosedMatrix[i, j]) + "<-";
-                }
-                TempString += "\r\n";
-            }
-
-            return TempString;
         }
 
         /// <summary>
@@ -397,7 +464,7 @@ namespace PathFinding
             //Start i and k at the end of the list and count backward.
             for (int i = 0; i < 2; i++)
             {
-                TempArray[ClosedSize, i] = ClosedMatrix[ClosedSize, i];
+                TempArray[ClosedSize, i] = ClosedNode[ClosedSize, i];
             }
 
             //This loop follows the trail of 
@@ -408,7 +475,7 @@ namespace PathFinding
                 for (int j = index; j >= 0; j += -1)
                 {
                     //are dead-end nodes that the
-                    if (ClosedMatrix[j, 0] == ClosedMatrix[index, 1])
+                    if (ClosedNode[j, 0] == ClosedNode[index, 1])
                     {
                         //algorithm decided against.
                         index = j;
@@ -416,10 +483,10 @@ namespace PathFinding
                         k--;
                         for (int i = 0; i < 2; i++)
                         {
-                            TempArray[k, i] = ClosedMatrix[index, i];
+                            TempArray[k, i] = ClosedNode[index, i];
                         }
 
-                        if (ClosedMatrix[index, 0] == StartLocation)
+                        if (ClosedNode[index, 0] == StartLocation)
                         {
                             RouteStart = k;
                             //StartLocation is at the last decrement of k.
@@ -445,4 +512,5 @@ namespace PathFinding
             return TempString;
         }
     }
+
 }
