@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.pic1 = new System.Windows.Forms.PictureBox();
@@ -41,6 +42,9 @@
             this.radioButton1 = new System.Windows.Forms.RadioButton();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.label3 = new System.Windows.Forms.Label();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.button3 = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pic1)).BeginInit();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
@@ -49,9 +53,9 @@
             // 
             this.button1.Location = new System.Drawing.Point(32, 25);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(120, 36);
+            this.button1.Size = new System.Drawing.Size(79, 36);
             this.button1.TabIndex = 0;
-            this.button1.Text = "建構地圖";
+            this.button1.Text = "空白地圖";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.MapInit_Click);
             // 
@@ -84,7 +88,7 @@
             this.textBox3.Name = "textBox3";
             this.textBox3.Size = new System.Drawing.Size(86, 22);
             this.textBox3.TabIndex = 5;
-            this.textBox3.Text = "13";
+            this.textBox3.Text = "25";
             // 
             // label1
             // 
@@ -110,7 +114,7 @@
             this.textBox4.Name = "textBox4";
             this.textBox4.Size = new System.Drawing.Size(86, 22);
             this.textBox4.TabIndex = 5;
-            this.textBox4.Text = "30";
+            this.textBox4.Text = "20";
             // 
             // groupBox1
             // 
@@ -170,11 +174,37 @@
             this.label3.TabIndex = 8;
             this.label3.Text = "座標：";
             // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(393, 103);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(72, 16);
+            this.checkBox1.TabIndex = 9;
+            this.checkBox1.Text = "允許斜走";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            // 
+            // timer1
+            // 
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
+            // button3
+            // 
+            this.button3.Location = new System.Drawing.Point(117, 25);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(79, 36);
+            this.button3.TabIndex = 10;
+            this.button3.Text = "隨機地圖";
+            this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.RandomMapInit_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(695, 758);
+            this.Controls.Add(this.button3);
+            this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.label2);
@@ -185,7 +215,7 @@
             this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
             this.Name = "Form1";
-            this.Text = "ma2g0103";
+            this.Text = "ASPF by Phisten";
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pic1)).EndInit();
             this.groupBox1.ResumeLayout(false);
@@ -210,6 +240,9 @@
         private System.Windows.Forms.RadioButton radioButton1;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.Button button3;
     }
 }
 

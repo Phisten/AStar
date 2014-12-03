@@ -8,7 +8,7 @@ namespace PathFinding
 {
     public class AStar
     {
-        public static int FindPath(int startNodeIndex, int endNodeIndex, ref AStarMap map, out List<AStarNode> bestPath)
+        public static int FindPath(int startNodeIndex, int endNodeIndex, bool AllowDiagonal, ref AStarMap map, out List<AStarNode> bestPath)
         {
             //input check
             if (startNodeIndex < 0 || startNodeIndex >= map.Size)
@@ -23,7 +23,7 @@ namespace PathFinding
             {
                 throw new ApplicationException();
             }
-            
+
             //init
             int Start = startNodeIndex;
             int end = endNodeIndex;
@@ -42,7 +42,7 @@ namespace PathFinding
             openList[0].TotalCost = openList[0].Risk;
             openList[0].State = AStarNode.NodeState.Open;
 
-            int PathSearchResult = PathTestLoop(endNodeIndex, map, openList, closedList);
+            int PathSearchResult = PathTestLoop(endNodeIndex, map, openList, closedList, AllowDiagonal);
 
             bestPath = new List<AStarNode>();
             //search bestPath
@@ -72,8 +72,24 @@ namespace PathFinding
             } while (trackBackContinue);
         }
 
-        private static int PathTestLoop(int endNodeIndex, AStarMap map, List<AStarNode> openList, List<AStarNode> closedList)
+        private static int PathTestLoop(int endNodeIndex, AStarMap map, List<AStarNode> openList, List<AStarNode> closedList, bool AllowDiagonal)
         {
+
+            List<int> X_PathList;
+            List<int> Y_PathList;
+            if (AllowDiagonal)
+            {
+                X_PathList = new List<int> { -1, 0, 1, -1, 0, 1, -1, 0, 1 };
+                Y_PathList = new List<int> { -1, -1, -1, 0, 0, 0, 1, 1, 1 };
+            }
+            else
+            {
+                X_PathList = new List<int> { 0, -1, 0, 1, 0 };
+                Y_PathList = new List<int> { -1, 0, 0, 0, 1 };
+            }
+            int DirectCount = X_PathList.Count;
+
+
             int searchResult = 0;
             //path finding loop
             bool SearchEnd = false;
@@ -101,55 +117,53 @@ namespace PathFinding
                 openList.Remove(curNode);
 
                 //Expansion Neighboring Node , label their Open
-                for (int i = -1; i < 2; i++)
+
+                for (int i = 0; i < DirectCount; i++)
                 {
-                    int X = curNode.X + i;
-                    for (int j = -1; j < 2; j++)
+                    int X = curNode.X + X_PathList[i];
+                    int Y = curNode.Y + Y_PathList[i];
+                    if (X >= 0 && X < map.Width && Y >= 0 && Y < map.Height) //未超過地圖邊界
                     {
-                        int Y = curNode.Y + j;
-                        if (X >= 0 && X < map.Width && Y >= 0 && Y < map.Height) //未超過地圖邊界
+                        AStarNode newNodeTmp = map[X][Y];
+                        if (newNodeTmp.Value == 0)  //Value 0 代表可通過 無障礙物
+                        //&& newNodeTmp != curNode  //排除Comparison by self
+                        //&& curNode.ParentNode != newNodeTmp)
                         {
-                            AStarNode newNodeTmp = map[X][Y];
-                            if (newNodeTmp.Value == 0)  //Value 0 代表可通過 無障礙物
-                                //&& newNodeTmp != curNode  //排除Comparison by self
-                                //&& curNode.ParentNode != newNodeTmp)
+                            // if is endPoint
+                            if (newNodeTmp.Index == endNodeIndex)
                             {
-                                // if is endPoint
-                                if (newNodeTmp.Index == endNodeIndex)
-                                {
-                                    SearchEnd = true;
-                                }
-
-                                //if newNode is open or close, select better
-                                switch (newNodeTmp.State)
-                                {
-                                    case AStarNode.NodeState.Open:
-                                    case AStarNode.NodeState.Close:
-                                        // if newPath is not better
-                                        // *this step will Exclude curNode self and curNode.Parent
-
-                                        if (newNodeTmp.TotalCost <= curNode.Cost + 1 + curNode.Risk)
-                                        {
-                                            continue;
-                                        }
-                                        //if (newNodeTmp.Cost <= curNode.Cost + 1)
-                                        //{
-                                            
-                                        //}
-                                        openList.Remove(newNodeTmp);
-                                        closedList.Remove(newNodeTmp);
-                                        break;
-                                    case AStarNode.NodeState.Unvisited:
-                                        break;
-                                    default:
-                                        throw new ApplicationException();
-                                        break;
-                                }
-
-                                curNode.SetChildNode(ref newNodeTmp);
-                                //move curNode to openList
-                                openList.Add(newNodeTmp);
+                                SearchEnd = true;
                             }
+
+                            //if newNode is open or close, select better
+                            switch (newNodeTmp.State)
+                            {
+                                case AStarNode.NodeState.Open:
+                                case AStarNode.NodeState.Close:
+                                    // if newPath is not better
+                                    // *this step will Exclude curNode self and curNode.Parent
+
+                                    if (newNodeTmp.TotalCost <= curNode.Cost + 1 + curNode.Risk)
+                                    {
+                                        continue;
+                                    }
+                                    //if (newNodeTmp.Cost <= curNode.Cost + 1)
+                                    //{
+
+                                    //}
+                                    openList.Remove(newNodeTmp);
+                                    closedList.Remove(newNodeTmp);
+                                    break;
+                                case AStarNode.NodeState.Unvisited:
+                                    break;
+                                default:
+                                    throw new ApplicationException();
+                                    break;
+                            }
+
+                            curNode.SetChildNode(ref newNodeTmp);
+                            //move curNode to openList
+                            openList.Add(newNodeTmp);
                         }
                     }
                 }
@@ -185,7 +199,7 @@ namespace PathFinding
 
             }
 
-            public void PathReset() 
+            public void PathReset()
             {
                 for (int i = 0; i < Width; i++)
                 {
@@ -203,9 +217,9 @@ namespace PathFinding
 
             public int SetAllNodeRisk(int targetIndex)
             {
-                return SetAllNodeRisk(targetIndex % Width , targetIndex / Height);
+                return SetAllNodeRisk(targetIndex % Width, targetIndex / Height);
             }
-            public int SetAllNodeRisk(int targetX,int targetY)
+            public int SetAllNodeRisk(int targetX, int targetY)
             {
                 AStarNode tarNode = Data[targetX][targetY];
 
@@ -242,7 +256,7 @@ namespace PathFinding
             //}
             #endregion
 
-            #region 座標轉換與距離計算 
+            #region 座標轉換與距離計算
             /// <summary>
             /// 取得兩座標在地圖中的最短網格距離(不考慮障礙)
             /// </summary>
@@ -266,7 +280,6 @@ namespace PathFinding
                 return Math.Abs((index1 % Size - index2 % Size) - (index1 / Size - index2 / Size));
             }
             #endregion
-
 
 
             public enum AStarMapErrorCode { Success }

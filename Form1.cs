@@ -22,6 +22,8 @@ namespace aStar
             MapInit_Click(null, null);
         }
 
+        /// <summary>路徑是否可走斜線</summary>
+        bool AllowDiagonal = false;
         /// <summary>
         /// 探索路徑
         /// </summary>
@@ -29,9 +31,15 @@ namespace aStar
         /// <param name="e"></param>
         private void PathFinding_Click(object sender, EventArgs e)
         {
+            if (aStarMap[MapEndIndex/MapSize][MapEndIndex%MapSize].Value == 1)
+            {
+                MessageBox.Show("終點在障礙物上");
+                return;
+            }
 
+            AllowDiagonal = this.checkBox1.Checked;
             bestPath = null;
-            bool findPath = PathFinding.AStar.FindPath(MapStartIndex, MapEndIndex,ref aStarMap, out bestPath) == 0;
+            bool findPath = PathFinding.AStar.FindPath(MapStartIndex, MapEndIndex, AllowDiagonal,ref aStarMap, out bestPath) == 0;
             if (findPath == false)
             {
                 MessageBox.Show("沒有從起點移動至終點的路徑,請修改地圖");
@@ -63,7 +71,7 @@ namespace aStar
         PathFinding.AStar.AStarMap aStarMap;
 
         /// <summary>
-        /// 建構地圖
+        /// 建構空白地圖
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -93,6 +101,50 @@ namespace aStar
             bestPath = null;
             DrawMap();
 
+        }
+
+        /// <summary>
+        /// 建構亂數地圖
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void RandomMapInit_Click(object sender, EventArgs e)
+        {
+            MapSize = int.Parse(textBox3.Text);
+            MapCellSize = int.Parse(textBox4.Text);
+            //MapData = new int[MapSize * MapSize];
+
+
+            aStarMap = new PathFinding.AStar.AStarMap(MapSize, MapSize);
+            //初始化地圖邊界
+            for (int i = 0, length = MapSize; i < length; i++)
+            {
+                aStarMap[0][i].Value = 1;
+                aStarMap[MapSize - 1][i].Value = 1;
+                aStarMap[i][MapSize - 1].Value = 1;
+                aStarMap[i][0].Value = 1;
+            }
+
+            Random rnd = new Random();
+
+            for (int i = 1; i < MapSize - 1; i++)
+            {
+                for (int j = 1; j < MapSize - 1; j++)
+                {
+                    int val = rnd.Next() % 8;
+                    aStarMap[i][j].Value = val > 1 ? 0 : 1;
+                }
+            }
+            //初始化起終點
+            MapStartIndex = MapSize + 1;
+            MapEndIndex = MapSize * MapSize - MapSize - 2;
+            //PathIndex = null;
+            bestPath = null;
+
+            aStarMap[MapStartIndex / MapSize][MapStartIndex % MapSize].Value = 0;
+            aStarMap[MapEndIndex / MapSize][MapEndIndex % MapSize].Value = 0;
+
+            DrawMap();
         }
 
 
@@ -147,13 +199,13 @@ namespace aStar
             }
 
             //畫上起點
-            Pen startPen = new Pen(Color.Blue, mapCellSize);
+            Pen startPen = new Pen(Color.Red, mapCellSize);
             int startX = (startIndex % mapSize) * mapCellSize;
             int startY = (startIndex / mapSize) * mapCellSize + +mapCellCenter;
             g.DrawLine(startPen, startX, startY, startX + mapCellSize, startY);
 
             //畫上終點
-            Pen endPen = new Pen(Color.Red, mapCellSize);
+            Pen endPen = new Pen(Color.Blue, mapCellSize);
             int endX = (endIndex % mapSize) * mapCellSize;
             int endY = (endIndex / mapSize) * mapCellSize + +mapCellCenter;
             g.DrawLine(endPen, endX, endY, endX + mapCellSize, endY);
@@ -286,6 +338,13 @@ namespace aStar
             MousePress = false;
             LastEditIndex = -1;
         }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+
+        }
+
+
 
 
     }
