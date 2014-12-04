@@ -20,6 +20,10 @@ namespace aStar
         private void Form1_Load(object sender, EventArgs e)
         {
             RandomMapInit_Click(null, null);
+            radioButton2.Checked = false;
+            radioButton2.Checked = true;
+
+            timer1.Interval = 55;
         }
 
         /// <summary>路徑是否可走斜線</summary>
@@ -204,6 +208,7 @@ namespace aStar
 
 
         PlayerKeyState playerMoveDirect = 0;
+        Keys lastKey;
         //KeyEventArgs playerKeyCode = new KeyEventArgs(new Keys());
         private void timer1_Tick(object sender, EventArgs e)
         {
@@ -216,35 +221,60 @@ namespace aStar
             {
                 X_Move--;
             }
-            if (playerMoveDirect == PlayerKeyState.Up)
+            else if (playerMoveDirect == PlayerKeyState.Up)
             {
                 Y_Move--;
             }
-            if (playerMoveDirect == PlayerKeyState.Right)
+            else if (playerMoveDirect == PlayerKeyState.Right)
             {
                 X_Move++;
             }
-            if (playerMoveDirect == PlayerKeyState.Down)
+            else if (playerMoveDirect == PlayerKeyState.Down)
             {
                 Y_Move++;
             }
+            else
+            {
+                if (lastKey == Keys.Left)
+                {
+                    X_Move--;
+                }
+                else if (lastKey == Keys.Up)
+                {
+                    Y_Move--;
+                }
+                else if (lastKey == Keys.Right)
+                {
+                    X_Move++;
+                }
+                else if (lastKey == Keys.Down)
+                {
+                    Y_Move++;
+                }
+            }
+
             int newX = playerX + X_Move;
             int newY = playerY + Y_Move;
-            if (0 < newX && newX < MapSize - 1 && 0 < newY && newY < MapSize - 1 &&
+
+            PlayerStep++;
+            if (PlayerStep >= PlayerStepThreshold &&
+                0 < newX && newX < MapSize - 1 && 0 < newY && newY < MapSize - 1 &&
                 aStarMap[newX][newY].Value == 0)
             {
                 Player = MapSize * newY + newX;
+                PlayerStep = 0;
+                lastKey = 0;
             }
 
-            aiStep++;
-            if (aiStep >= 2)
+            EnemyStep++;
+            if (EnemyStep >= EnemyStepThreshold)
             {
                 bool findPath = PathFinding.AStar.FindPath(Enemy, Player, AllowDiagonal, ref aStarMap, out bestPath) == 0;
-                if (findPath == true && bestPath.Count > 2)
+                if (findPath == true && bestPath.Count >= 2)
                 {
                     Enemy = bestPath[bestPath.Count - 2].Index;
                 }
-                aiStep = 0;
+                EnemyStep = 0;
             }
 
             if (Player == ScorePoint)
@@ -256,7 +286,7 @@ namespace aStar
                 do
                 {
                     ScorePoint = rand.Next() % (MapSize * MapSize - 1);
-                } while (aStarMap.GetNodeFromIndex(ScorePoint).Value != 0);
+                } while (aStarMap.GetNodeFromIndex(ScorePoint).Value != 0 && ScorePoint != Player);
             }
 
 
@@ -269,7 +299,10 @@ namespace aStar
             }
         }
 
-        int aiStep = 0;
+        int EnemyStep = 0;
+        int EnemyStepThreshold = 2;
+        int PlayerStep = 0;
+        int PlayerStepThreshold = 2;
         int Score = 0;
         int ScorePoint = 0;
 
@@ -287,7 +320,6 @@ namespace aStar
                 Score = 0;
                 label3.Text = "目前得分：0";
 
-                timer1.Interval = 125;
                 button4.Text = "停止遊戲";
             }
             else
@@ -300,29 +332,13 @@ namespace aStar
             button3.Enabled = curInvEnableState;
             textBox3.Enabled = curInvEnableState;
             textBox4.Enabled = curInvEnableState;
+            radioButton1.Enabled = curInvEnableState;
+            radioButton2.Enabled = curInvEnableState;
+            radioButton3.Enabled = curInvEnableState;
             timer1.Enabled = curEnableState;
         }
 
 
-        private void GameForm_KeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Left && playerMoveDirect == PlayerKeyState.Left)
-            {
-                playerMoveDirect = PlayerKeyState.Null;
-            }
-            if (e.KeyCode == Keys.Up && playerMoveDirect == PlayerKeyState.Up)
-            {
-                playerMoveDirect = PlayerKeyState.Null;
-            }
-            if (e.KeyCode == Keys.Right && playerMoveDirect == PlayerKeyState.Right)
-            {
-                playerMoveDirect = PlayerKeyState.Null;
-            }
-            if (e.KeyCode == Keys.Down && playerMoveDirect == PlayerKeyState.Down)
-            {
-                playerMoveDirect = PlayerKeyState.Null;
-            }
-        }
 
         [Flags]
         public enum PlayerKeyState
@@ -348,7 +364,44 @@ namespace aStar
             {
                 playerMoveDirect = PlayerKeyState.Down;
             }
+            lastKey = keyData;
             return base.ProcessDialogKey(keyData);
+        }
+        private void GameForm_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Left && playerMoveDirect == PlayerKeyState.Left)
+            {
+                playerMoveDirect = PlayerKeyState.Null;
+            }
+            if (e.KeyCode == Keys.Up && playerMoveDirect == PlayerKeyState.Up)
+            {
+                playerMoveDirect = PlayerKeyState.Null;
+            }
+            if (e.KeyCode == Keys.Right && playerMoveDirect == PlayerKeyState.Right)
+            {
+                playerMoveDirect = PlayerKeyState.Null;
+            }
+            if (e.KeyCode == Keys.Down && playerMoveDirect == PlayerKeyState.Down)
+            {
+                playerMoveDirect = PlayerKeyState.Null;
+            }
+        }
+
+        private void rbDif_CheckedChanged(object sender, EventArgs e)
+        {
+            RadioButton rb = sender as RadioButton;
+            if (rb == radioButton1)
+            {
+                EnemyStepThreshold = 3;
+            }
+            if (rb == radioButton2)
+            {
+                EnemyStepThreshold = 4;
+            }
+            if (rb == radioButton3)
+            {
+                EnemyStepThreshold = 6;
+            }
         }
     }
 }
