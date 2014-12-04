@@ -8,6 +8,8 @@ namespace PathFinding
 {
     public class AStar
     {
+        const double sqrt2 = 1.414213562373d;
+
         public static int FindPath(int startNodeIndex, int endNodeIndex, bool AllowDiagonal, ref AStarMap map, out List<AStarNode> bestPath)
         {
             //input check
@@ -77,20 +79,24 @@ namespace PathFinding
 
             List<int> X_PathList;
             List<int> Y_PathList;
+            List<double> Cost_PathList = new List<double>();
             if (AllowDiagonal)
             {
-                X_PathList = new List<int> { -1, 0, 1, -1, 0, 1, -1, 0, 1 };
-                Y_PathList = new List<int> { -1, -1, -1, 0, 0, 0, 1, 1, 1 };
+                X_PathList = new List<int> { -1, 0, 1, -1, 1, -1, 0, 1 };
+                Y_PathList = new List<int> { -1, -1, -1, 0, 0, 1, 1, 1 };
             }
             else
             {
-                X_PathList = new List<int> { 0, -1, 0, 1, 0 };
-                Y_PathList = new List<int> { -1, 0, 0, 0, 1 };
+                X_PathList = new List<int> { 0, -1, 1, 0 };
+                Y_PathList = new List<int> { -1, 0, 0, 1 };
             }
             int DirectCount = X_PathList.Count;
+            for (int i = 0; i < DirectCount; i++)
+            {
+                Cost_PathList.Add(X_PathList[i] == 0 || Y_PathList[i] == 0 ? 1d : sqrt2);
+            }
 
-
-            int searchResult = 0;
+            int searchFailed = 0;
             //path finding loop
             bool SearchEnd = false;
             do
@@ -98,9 +104,11 @@ namespace PathFinding
                 //檢查OpenList內是否還有待探索節點, 無則表示已無活路
                 if (openList.Count == 0)
                 {
-                    searchResult = 1;
+                    if (map.GetNodeFromIndex(endNodeIndex).ParentNode == null)
+                    {
+                        searchFailed = 1;
+                    }
                     SearchEnd = true;
-
                     break;
                 }
 
@@ -116,8 +124,8 @@ namespace PathFinding
                 closedList.Add(curNode);
                 openList.Remove(curNode);
 
-                //Expansion Neighboring Node , label their Open
 
+                //Expansion Neighboring Node , label their Open
                 for (int i = 0; i < DirectCount; i++)
                 {
                     int X = curNode.X + X_PathList[i];
@@ -142,15 +150,11 @@ namespace PathFinding
                                 case AStarNode.NodeState.Close:
                                     // if newPath is not better
                                     // *this step will Exclude curNode self and curNode.Parent
-
-                                    if (newNodeTmp.TotalCost <= curNode.Cost + 1 + curNode.Risk)
+                                    if (newNodeTmp.Cost <= curNode.Cost + Cost_PathList[i])
                                     {
                                         continue;
                                     }
-                                    //if (newNodeTmp.Cost <= curNode.Cost + 1)
-                                    //{
 
-                                    //}
                                     openList.Remove(newNodeTmp);
                                     closedList.Remove(newNodeTmp);
                                     break;
@@ -161,16 +165,20 @@ namespace PathFinding
                                     break;
                             }
 
-                            curNode.SetChildNode(ref newNodeTmp);
+                            openList.Remove(newNodeTmp);
+                            closedList.Remove(newNodeTmp);
                             //move curNode to openList
-                            openList.Add(newNodeTmp);
+                            if (curNode.SetChildNode(ref newNodeTmp, Cost_PathList[i]) == (int)AStarNode.AStarNodeErrorCode.Success)
+                            {
+                                openList.Add(newNodeTmp);
+                            }
                         }
                     }
                 }
 
 
             } while (!SearchEnd);
-            return searchResult;
+            return searchFailed;
         }
 
 
@@ -205,9 +213,9 @@ namespace PathFinding
                 {
                     for (int j = 0; j < Height; j++)
                     {
-                        Data[i][j].Cost = int.MaxValue;
-                        Data[i][j].Risk = int.MaxValue;
-                        Data[i][j].TotalCost = int.MaxValue;
+                        Data[i][j].Cost = double.MaxValue;
+                        Data[i][j].Risk = double.MaxValue;
+                        Data[i][j].TotalCost = double.MaxValue;
 
                         Data[i][j].ParentNode = null;
                         Data[i][j].State = AStarNode.NodeState.Unvisited;
@@ -241,11 +249,7 @@ namespace PathFinding
                 get { return Data[X]; }
                 set { Data[X] = value; }
             }
-            /// <summary>
-            /// 透過索引取得地圖資訊
-            /// </summary>
-            /// <param name="index"></param>
-            /// <returns></returns>
+            /// <summary>透過索引取得地圖資訊</summary>
             public AStarNode GetNodeFromIndex(int index)
             {
                 return Data[index % Width][index / Width];
@@ -295,38 +299,46 @@ namespace PathFinding
             public int Y;
 
             //path data
-            public int TotalCost; //func F 值越低越好
-            public int Cost = int.MaxValue; //func G
-            public int Risk = int.MaxValue; //func H
+            public double TotalCost; //func F 值越低越好
+            public double Cost = double.MaxValue; //func G
+            public double Risk = double.MaxValue; //func H
             public AStarNode ParentNode = null;
             public NodeState State = NodeState.Unvisited;
 
             public enum NodeState { Unvisited, Open, Close };
 
-            /// <summary>
-            /// 將傳入節點設定為子節點,並將狀態設為open
-            /// </summary>
-            /// <param name="childNode"></param>
-            /// <returns></returns>
-            public int SetChildNode(ref AStarNode childNode)
+            /// <summary>將傳入節點設定為子節點並設其open,若子節點已有父節點 則會檢查total cost是否較優</summary>
+            public int SetChildNode(ref AStarNode childNode, double Cost)
             {
                 if (childNode == null)
                     return (int)AStarNodeErrorCode.childNode_Is_Null;
 
-                childNode.ParentNode = this;
-                childNode.Cost = this.Cost + 1;
-                childNode.TotalCost = childNode.Cost + childNode.Risk;
-                childNode.State = NodeState.Open;
+                double newChildCost = this.Cost + Cost;
 
-                return (int)AStarNodeErrorCode.Success;
+                // if newPath is not better
+                // *this step will Exclude curNode self and curNode.Parent
+                if (childNode.ParentNode != null && newChildCost >= childNode.Cost)
+                {
+                    return (int)AStarNodeErrorCode.childNode_HasBetterParents;
+                }
+                else
+                {
+                    childNode.ParentNode = this;
+                    childNode.Cost = newChildCost;
+                    childNode.TotalCost = childNode.Cost + childNode.Risk;
+                    childNode.State = NodeState.Open;
+                    return (int)AStarNodeErrorCode.Success;
+                }
+
+
             }
 
-            public int GetGridDistance(AStarNode targetNode)
+            public double GetGridDistance(AStarNode targetNode)
             {
                 return Math.Abs((this.X - targetNode.X) - (this.Y - targetNode.Y));
             }
 
-            public enum AStarNodeErrorCode { Success, childNode_Is_Null }
+            public enum AStarNodeErrorCode { Success, childNode_Is_Null, childNode_HasBetterParents }
         }
     }
 
