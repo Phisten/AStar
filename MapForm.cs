@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace aStar
 {
-    public partial class Form1 : Form
+    public partial class MapForm : Form
     {
-        public Form1()
+        public MapForm()
         {
             InitializeComponent();
         }
@@ -20,6 +20,9 @@ namespace aStar
         private void Form1_Load(object sender, EventArgs e)
         {
             MapInit_Click(null, null);
+            (new GameForm()).Show();
+
+            //this.Left = -500;
         }
 
         /// <summary>路徑是否可走斜線</summary>
@@ -338,12 +341,6 @@ namespace aStar
             MousePress = false;
             LastEditIndex = -1;
         }
-
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-
-        }
-
 
 
 
