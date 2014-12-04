@@ -13,5 +13,4 @@ D:\Phisten\Google\project\aStar\aStar\obj\Debug\aStar.csprojResolveAssemblyRefer
 D:\Phisten\Google\project\aStar\aStar\obj\Debug\aStar.Form1.resources
 D:\Phisten\Google\project\aStar\aStar\obj\Debug\aStar.Properties.Resources.resources
 D:\Phisten\Google\project\aStar\aStar\obj\Debug\aStar.csproj.GenerateResource.Cache
-D:\Phisten\GoogleCloud\project\aStar\aStar\obj\Debug\aStar.MapForm.resources
 D:\Phisten\GoogleCloud\project\aStar\aStar\obj\Debug\aStar.GameForm.resources

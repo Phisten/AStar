@@ -240,7 +240,7 @@ namespace aStar
             if (aiStep >= 2)
             {
                 bool findPath = PathFinding.AStar.FindPath(Enemy, Player, AllowDiagonal, ref aStarMap, out bestPath) == 0;
-                if (findPath == true)
+                if (findPath == true && bestPath.Count > 2)
                 {
                     Enemy = bestPath[bestPath.Count - 2].Index;
                 }
@@ -285,8 +285,9 @@ namespace aStar
                 Player = MapSize * MapSize - MapSize - 2;
                 ScorePoint = Enemy;
                 Score = 0;
+                label3.Text = "目前得分：0";
 
-                timer1.Interval = 75;
+                timer1.Interval = 125;
                 button4.Text = "停止遊戲";
             }
             else
