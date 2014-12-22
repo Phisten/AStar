@@ -22,7 +22,7 @@ namespace aStar
             RandomMapInit_Click(null, null);
             radioButton2.Checked = false;
             radioButton2.Checked = true;
-
+            checkBox1.Visible = false;
             timer1.Interval = 55;
         }
 
@@ -172,6 +172,19 @@ namespace aStar
                 }
             }
 
+            //畫上敵人最佳接近路徑
+            if (bestPath != null)
+            {
+                Pen pathPen = new Pen(Color.FromArgb(190, 254, 243), mapCellSize);
+                int pathX, pathY;
+                for (int i = 1; i < bestPath.Count - 1; i++)
+                {
+                    pathX = bestPath[i].X * mapCellSize;
+                    pathY = bestPath[i].Y * mapCellSize + mapCellCenter;
+                    g.DrawLine(pathPen, pathX, pathY, pathX + mapCellSize,pathY);
+                }
+            }
+
             //畫上得分點
             Pen ScorePointPen = new Pen(Color.Yellow, mapCellSize);
             int ScorePointX = (scorePoint % mapSize) * mapCellSize;
@@ -279,7 +292,19 @@ namespace aStar
 
             if (Player == ScorePoint)
             {
-                Score++;
+                switch (EnemyStepThreshold)
+                {
+                    case 6:
+                        Score++;
+                        break;
+                    case 4:
+                        Score += 1.5;
+                        break;
+                    case 3:
+                    default:
+                        Score += 2;
+                        break;
+                }
                 label3.Text = "目前得分：" + Score;
 
                 Random rand = new Random();
@@ -303,7 +328,7 @@ namespace aStar
         int EnemyStepThreshold = 2;
         int PlayerStep = 0;
         int PlayerStepThreshold = 2;
-        int Score = 0;
+        double Score = 0;
         int ScorePoint = 0;
 
         private void button4_Click_GameStart(object sender, EventArgs e)
@@ -402,6 +427,12 @@ namespace aStar
             {
                 EnemyStepThreshold = 6;
             }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            button2.Text = timer1.Enabled ? "繼續" : "暫停";
+            timer1.Enabled = !timer1.Enabled;
         }
     }
 }
